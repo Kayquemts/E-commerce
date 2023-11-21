@@ -1,0 +1,20 @@
+[
+  {
+    "nome": "João",
+    "senha": "senha123",
+    "cpf": "111.222.333-44",
+    "idade": 30
+  },
+  {
+    "nome": "Maria",
+    "senha": "senha456",
+    "cpf": "555.666.777-88",
+    "idade": 25
+  },
+  {
+    "nome": "Carlos",
+    "senha": "senha789",
+    "cpf": "999.888.777-66",
+    "idade": 35
+  }
+]
