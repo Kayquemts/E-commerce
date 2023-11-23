@@ -71,12 +71,20 @@ public class HelloController {
                 for(Admin a: admins){
                     if(a.getNome().equals(nome.getText()) && a.getSenha().equals(senha.getText())){
                         System.out.println("Login feito com sucesso");
+                        /*
                         FXMLLoader fx = new FXMLLoader(HelloController.class.getResource("home-view.fxml"));
                         Scene home = new Scene(fx.load());
                         Stage st = new Stage();
                         st.setTitle("Home");
                         st.setScene(home);
-                        st.show();
+                        st.show();*/
+                        AdminTela adminTela = new AdminTela();
+                        Stage stage = new Stage();
+
+
+                        // Chamar o método de inicialização manualmente
+                        adminTela.start(stage);
+
                         return;
                     }
                 }
