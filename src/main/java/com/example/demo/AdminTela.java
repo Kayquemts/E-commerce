@@ -446,7 +446,7 @@ public class AdminTela extends Application {
 
         try(Reader reader = new FileReader(caminhoArquivo.toFile())) {
             listaProduto = gson.fromJson(reader, produtoList);
-            listaProduto.add(p);
+            listaProduto.add(produtoModificado);
 
         }catch (IOException e) {
             e.printStackTrace();
