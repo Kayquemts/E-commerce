@@ -257,7 +257,6 @@ public class AdminTela extends Application {
             atualizarButton.setOnAction(updateEvent -> {
                 String nomeProduto = textFieldNomeProduto.getText();
                 int quantidadeAlterada = Integer.parseInt(textFieldQuantidade.getText());
-
                 atualizarEstoqueNoArquivo(nomeProduto, quantidadeAlterada);
 
                 // Volta para o submenu principal após a atualização
@@ -446,7 +445,7 @@ public class AdminTela extends Application {
 
         try(Reader reader = new FileReader(caminhoArquivo.toFile())) {
             listaProduto = gson.fromJson(reader, produtoList);
-            listaProduto.add(produtoModificado);
+
 
         }catch (IOException e) {
             e.printStackTrace();
@@ -456,90 +455,55 @@ public class AdminTela extends Application {
                 listaProduto.set(i,produtoModificado);
             }
         }
+        gson = new Gson();
+        String json = gson.toJson(listaProduto);
 
+        try(FileWriter writer = new FileWriter(caminhoArquivo.toFile())){
+            writer.write(json);
+            System.out.println("Deu certo");
+        }catch(IOException e) {
+            e.printStackTrace();
+        }
     }
-
-
 
     //-------------------------------------------------------------------------------------
     // FUNÇÃO PARA REMOVER
     private void removerProdutoNoArquivo(String nomeProduto) {
-        try {
-            String diretorioAtual = System.getProperty("user.dir");
-            File diretorio = new File(diretorioAtual);
-            diretorio.mkdir(); // Cria o diretório se não existir
 
-            File arquivoProdutos = new File(diretorio, "produtos.txt");
-            File arquivoTemporario = new File(diretorio, "temp.txt");
-            FileReader fr = new FileReader(arquivoProdutos);
-            BufferedReader br = new BufferedReader(fr);
-            FileWriter fw = new FileWriter(arquivoTemporario);
-            BufferedWriter bw = new BufferedWriter(fw);
-
-            String linhaAtual;
-            while ((linhaAtual = br.readLine()) != null) {
-                String[] dadosProduto = linhaAtual.split(";");
-                if (!dadosProduto[0].equals(nomeProduto)) {
-                    bw.write(linhaAtual);
-                    bw.newLine();
-                }
-            }
-
-            br.close();
-            fr.close();
-            bw.close();
-            fw.close();
-
-            arquivoProdutos.delete(); // Deletar o arquivo antigo
-            arquivoTemporario.renameTo(arquivoProdutos); // Renomear o arquivo temporário para o original
-            System.out.println("Produto removido com sucesso!");
-        } catch (IOException e) {
-            System.out.println("Erro ao remover o produto: " + e.getMessage());
-        }
     }
     //-------------------------------------------------------------------------------------
     //FUNÇÃO PARA ATUALIZAR O ESTOQUE
     private void atualizarEstoqueNoArquivo(String nomeProduto, int quantidadeAlterada) {
-        try {
-            String diretorioAtual = System.getProperty("user.dir");
-            File diretorio = new File(diretorioAtual);
-            diretorio.mkdir();
+        String filePath = System.getProperty("user.dir");
+        Gson gson = new Gson();
+        Type produtoList = new TypeToken<List<Produto>>(){}.getType();
+        Path caminhoArquivo = Paths.get(filePath,"Produtos.json");
+        List<Produto> listaProduto = new ArrayList<>();
+        System.out.println("teste");
 
-            File arquivoProdutos = new File(diretorio, "produtos.txt");
-            File arquivoTemporario = new File(diretorio, "temp.txt");
-            FileReader fr = new FileReader(arquivoProdutos);
-            BufferedReader br = new BufferedReader(fr);
-            FileWriter fw = new FileWriter(arquivoTemporario);
-            BufferedWriter bw = new BufferedWriter(fw);
+        try(Reader reader = new FileReader(caminhoArquivo.toFile())) {
+            listaProduto = gson.fromJson(reader, produtoList);
 
-            String linhaAtual;
-            while ((linhaAtual = br.readLine()) != null) {
-                String[] dadosProduto = linhaAtual.split(";");
-                if (dadosProduto[0].equals(nomeProduto)) {
-                    int quantidadeAtual = Integer.parseInt(dadosProduto[4]);
-                    int novaQuantidade = quantidadeAtual + quantidadeAlterada;
-                    if (novaQuantidade >= 0) {
-                        dadosProduto[4] = Integer.toString(novaQuantidade);
-                    } else {
-                        // Evita que a quantidade seja negativa
-                        dadosProduto[4] = "0";
-                    }
-                    linhaAtual = String.join(";", dadosProduto);
-                }
-                bw.write(linhaAtual);
-                bw.newLine();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+        for(int i = 0; i < listaProduto.size();i++){
+            if(listaProduto.get(i).getNome().equals(nomeProduto)){
+                listaProduto.get(i).setQuantidadeEmEstoque(listaProduto.get(i).getQuantidadeEmEstoque()+quantidadeAlterada);
             }
+        }
 
-            br.close();
-            fr.close();
-            bw.close();
-            fw.close();
+        gson = new Gson();
+        String json = gson.toJson(listaProduto);
 
-            arquivoProdutos.delete();
-            arquivoTemporario.renameTo(arquivoProdutos);
-            System.out.println("Estoque atualizado com sucesso!");
-        } catch (IOException e) {
-            System.out.println("Erro ao atualizar o estoque: " + e.getMessage());
+        try(FileWriter writer = new FileWriter(caminhoArquivo.toFile())){
+            writer.write(json);
+            System.out.println("Deu certo");
+        }catch(IOException e) {
+            e.printStackTrace();
         }
     }
 
