@@ -5,11 +5,13 @@ public class Cliente {
     private String senha;
     private String cpf;
     private int idade;
+    public static Cliente clienteLogado;
 
-    public Cliente(String nome, String cpf, int idade) {
+    public Cliente(String nome, String cpf, int idade, String senha) {
         this.nome = nome;
         this.cpf = cpf;
         this.idade = idade;
+        this.senha = senha;
     }
 
     public String getNome() {

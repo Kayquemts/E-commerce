@@ -13,6 +13,8 @@ import javafx.scene.control.TextField;
 import com.google.gson.Gson;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
+
 
 import java.io.FileReader;
 import java.io.Reader;
@@ -23,7 +25,7 @@ import java.util.List;
 
 public class HelloController {
     @FXML
-    private Label errorMessager;
+    private Label errorMessage;
     @FXML
     private TextField nome;
     @FXML
@@ -34,9 +36,9 @@ public class HelloController {
     private RadioButton admin;
 
     @FXML
-    protected void onHelloButtonClick(ActionEvent event) {
+    public void onHelloButtonClick(ActionEvent event) {
         if(cliente.isSelected() && admin.isSelected()){
-            errorMessager.setText("Selecione so um campo");
+            errorMessage.setText("Selecione so um campo");
         }else if(cliente.isSelected()) {
 
             String filePath = System.getProperty("user.dir");
@@ -51,7 +53,11 @@ public class HelloController {
                     if(a.getNome().equals(nome.getText()) && a.getSenha().equals(senha.getText())) {
                         System.out.println("Login feito com sucesso");
 
+                        ClienteTela clienteTela = new ClienteTela();
+                        Stage stage = new Stage();
 
+                        Cliente.clienteLogado = a;
+                        clienteTela.start(stage);
                         return;
                     }
                 }
@@ -71,16 +77,9 @@ public class HelloController {
                 for(Admin a: admins){
                     if(a.getNome().equals(nome.getText()) && a.getSenha().equals(senha.getText())){
                         System.out.println("Login feito com sucesso");
-                        /*
-                        FXMLLoader fx = new FXMLLoader(HelloController.class.getResource("home-view.fxml"));
-                        Scene home = new Scene(fx.load());
-                        Stage st = new Stage();
-                        st.setTitle("Home");
-                        st.setScene(home);
-                        st.show();*/
+
                         AdminTela adminTela = new AdminTela();
                         Stage stage = new Stage();
-
 
                         // Chamar o método de inicialização manualmente
                         adminTela.start(stage);
@@ -92,6 +91,24 @@ public class HelloController {
                 System.out.println("Deu Erro"+e.getMessage());
             }
 
+        }
+    }
+
+
+    public void onCriarCliente() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("novo-usuario.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+
+            // Se você precisar acessar o controlador da nova tela
+            NovoUsuarioController novoUsuarioController = loader.getController();
+
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

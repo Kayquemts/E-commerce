@@ -308,6 +308,7 @@ public class AdminTela extends Application {
     //-------------------------------------------------------------------------------------
     //FUNÇÃO PARA ALTERAR OS DADOS NO ARQUIVO
     private void alterarProdutoNoArquivo(String nomeProdutoAntigo, Produto produtoModificado) {
+
         String filePath = System.getProperty("user.dir");
         Gson gson = new Gson();
         Type produtoList = new TypeToken<List<Produto>>(){}.getType();
@@ -316,7 +317,6 @@ public class AdminTela extends Application {
 
         try(Reader reader = new FileReader(caminhoArquivo.toFile())) {
             listaProduto = gson.fromJson(reader, produtoList);
-
 
         }catch (IOException e) {
             e.printStackTrace();

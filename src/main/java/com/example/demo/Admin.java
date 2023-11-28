@@ -19,4 +19,12 @@ public class Admin {
     public void setSenha(String senha) {
         this.senha = senha;
     }
+
+    @Override
+    public String toString() {
+        return "Admin{" +
+                "nome='" + nome + '\'' +
+                ", senha='" + senha + '\'' +
+                '}';
+    }
 }
