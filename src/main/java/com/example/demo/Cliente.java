@@ -5,6 +5,7 @@ public class Cliente {
     private String senha;
     private String cpf;
     private int idade;
+    private int pontosAcumulados;
     public static Cliente clienteLogado;
 
     public Cliente(String nome, String cpf, int idade, String senha) {
@@ -12,6 +13,15 @@ public class Cliente {
         this.cpf = cpf;
         this.idade = idade;
         this.senha = senha;
+        this.pontosAcumulados = 0;
+    }
+
+    public int getPontosAcumulados() {
+        return pontosAcumulados;
+    }
+
+    public void setPontosAcumulados(int pontosAcumulados) {
+        this.pontosAcumulados = pontosAcumulados;
     }
 
     public String getNome() {

@@ -1,0 +1,36 @@
+[
+  [
+    {
+      "nome": "Mouse",
+      "categoria": "informatica",
+      "preco": 10.0,
+      "desconto": 0.0,
+      "quantidadeEmEstoque": 96.0,
+      "pontos": 10.0
+    },
+    {
+      "nome": "Teclado",
+      "categoria": "informatica",
+      "preco": 10.0,
+      "desconto": 11.0,
+      "quantidadeEmEstoque": 147.0,
+      "pontos": 10.0
+    }
+  ],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  []
+]
