@@ -24,7 +24,7 @@ import java.io.*;
 
 public class ClienteTela extends Application {
     private ObservableList<Produto> carrinho = FXCollections.observableArrayList();
-    private Carrinho car = new Carrinho();
+    private Carrinho car;
     private List<List<Produto>> historicoCompras = new ArrayList<>();
 
     private int pontosDoCliente = 0;
@@ -33,11 +33,11 @@ public class ClienteTela extends Application {
 
     @Override
     public void start(Stage primaryStage){
-        carregarHistoricoCompras();
+        //carregarHistoricoCompras();
         this.primaryStage = primaryStage;
         primaryStage.setTitle("Seja bem vindo");
 
-
+        car = new Carrinho(Cliente.clienteLogado.getNome());
 
 
         root = new VBox();
@@ -60,8 +60,61 @@ public class ClienteTela extends Application {
         //Button insertDataButton = new Button("Inserir dados de cadastro");
         Button alterDataButton = new Button("Alterar dados de cadastro");
         Button compraButton = new Button("Realizar uma compra");
-        //Button clientReportsButton = new Button("Exibir relatórios");
-        //Button clientExitButton = new Button("Sair do menu Cliente");
+        Button relatorioButton = new Button("Exibir relatórios");
+
+        relatorioButton.setOnAction(event -> {
+            String filePath = System.getProperty("user.dir");
+            Gson gson = new Gson();
+
+            Type historicoType = new TypeToken<List<Carrinho>>(){}.getType();
+            Path caminhoArquivo = Paths.get(filePath,"Compra.json");
+
+            List<Carrinho> historico = new ArrayList<>();
+
+            try(Reader reader = new FileReader(caminhoArquivo.toFile())){
+                historico = gson.fromJson(reader,historicoType);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            Stage relatorio = new Stage();
+            relatorio.setTitle("Relatorio");
+
+            VBox relatorioLayout = new VBox(10);
+
+            for(int i = 0; i < historico.size(); i++){
+                if(historico.get(i).getCliente().equals(Cliente.clienteLogado.getNome())){
+                    Label data = new Label(historico.get(i).getDataAtual());
+
+                    relatorioLayout.getChildren().addAll(data);
+                    for(int j = 0; j < historico.get(i).getQuantProd(); j++){
+                        Label valorUnitario = new Label(historico.get(i).getProdutos(j).getNome() + " :"+ historico.get(i).getProdutos(j).getPreco());
+                        Label pontos = new Label("Total de Pontos: " + historico.get(i).calcularTotalPontos());
+                        relatorioLayout.getChildren().addAll(valorUnitario);
+                    }
+                    Label total = new Label("Total : " + historico.get(i).calcularTotalGasto());
+                    relatorioLayout.getChildren().addAll(total);
+                }
+
+
+            }
+
+
+
+            relatorioLayout.setAlignment(Pos.CENTER);
+
+            /*
+            valor de pontos ganhos por compra, e valor total de pontos ganhos.
+             */
+
+
+            Scene scene = new Scene(relatorioLayout, 400, 300);
+
+
+            relatorio.setScene(scene);
+
+            relatorio.show();
+        });
 
 
         alterDataButton.setOnAction(event -> {
@@ -149,7 +202,7 @@ public class ClienteTela extends Application {
         Button visualizarCarrinhoButton = new Button("Visualizar Carrinho");
         visualizarCarrinhoButton.setOnAction(event -> exibirCarrinho());
 
-        root.getChildren().addAll(msg4, alterDataButton, compraButton, visualizarCarrinhoButton);
+        root.getChildren().addAll(msg4, alterDataButton, compraButton, visualizarCarrinhoButton,relatorioButton);
     }
 
     private void efetuarCompra() {
@@ -161,9 +214,10 @@ public class ClienteTela extends Application {
         atualizarEstoque();
         historicoCompras.add(new ArrayList<>(carrinho));
         carrinho.clear();
-        car.clear();
+
         System.out.println("Compra efetuada com sucesso!");
         salvarHistoricoCompras();
+        car.clear();
     }
 
     private void atualizarEstoque() {
@@ -232,18 +286,49 @@ public class ClienteTela extends Application {
         Label labelTotalPontos = new Label("Total de Pontos: " + totalPontos);
 
 
+        Button relacionadosButton = new Button("Ver produtos Similares");
+        relacionadosButton.setOnAction(event -> {
+            Stage relacionados = new Stage();
+            relacionados.setTitle("Produtos Similares");
+
+            List<Carrinho> historico = lerJson();
+
+            List<Produto> produtos = Produto.carregarProdutosPorCategoria("informatica");
+
+
+
+            Map<String, Integer> quantidadePorProduto = contarQuantidadePorProduto(historico);
+
+            List<Map.Entry<String, Integer>> produtosMaisComprados = obterProdutosMaisComprados(quantidadePorProduto, 3);
+
+            VBox similaresLayout = new VBox(5);
+
+            for (Map.Entry<String, Integer> produto : produtosMaisComprados) {
+                Label labelProduto = new Label(produto.getKey());
+                similaresLayout.getChildren().addAll(labelProduto);
+            }
+
+
+
+            //List<Produto> produtos = Produto.carregarProdutosPorCategoria("Livro");
+
+
+
+
+
+            Scene similareScene = new Scene(similaresLayout, 500,500);
+
+            relacionados.setScene(similareScene);
+            relacionados.show();
+        });
 
         Button efetuarCompraButton = new Button("Efetuar Compra");
         int finalTotalPontos = totalPontos;
         double finalTotalCompra = totalCompra;
         double desconto = preco-totalCompra;
-        System.out.println("preco normal: "+preco);
-        System.out.println("desconto aplicado: "+desconto);
-        System.out.println("preco final: "+finalTotalCompra);
-        System.out.println("poontos : "+finalTotalPontos);
 
         efetuarCompraButton.setOnAction(event -> realizarPagamento(finalTotalCompra,finalTotalPontos, desconto));
-        carrinhoLayout.getChildren().addAll(labelPreco, labelTotalCompra, labelTotalPontos, efetuarCompraButton);
+        carrinhoLayout.getChildren().addAll(labelPreco, labelTotalCompra, labelTotalPontos, efetuarCompraButton,relacionadosButton);
 
         Scene carrinhoScene = new Scene(carrinhoLayout, 300, 300);
         carrinhoStage.setScene(carrinhoScene);
@@ -375,19 +460,53 @@ public class ClienteTela extends Application {
     //Funções de acões
 
     private void salvarHistoricoCompras() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        // Especificar o caminho do arquivo onde você deseja salvar o histórico de compras
-        String caminhoArquivo = "Compra.json";
+        String filePath = System.getProperty("user.dir");
+        Gson gson = new Gson();
 
-        try (FileWriter writer = new FileWriter(caminhoArquivo)) {
-            // Escrever o JSON no arquivo
-            String jsonHistorico = gson.toJson(historicoCompras);
-            writer.write(jsonHistorico);
-            System.out.println("Histórico de compras salvo em: " + caminhoArquivo);
+        Type historicoType = new TypeToken<List<Carrinho>>(){}.getType();
+        Path caminhoArquivo = Paths.get(filePath,"Compra.json");
+
+        List<Carrinho> historico = new ArrayList<>();
+
+        try(Reader reader = new FileReader(caminhoArquivo.toFile())){
+            historico = gson.fromJson(reader,historicoType);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        historico.add(car);
+
+        gson = new Gson();
+        try(FileWriter writer = new FileWriter(caminhoArquivo.toFile())){
+            gson.toJson(historico,writer);
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        /*
+        Type produtoListType = new TypeToken<List<Produto>>(){}.getType();
+        Path caminhoArquivo = Paths.get(filePath, "Produtos.json");
+
+        List<Produto> listaProdutos = new ArrayList<>();
+
+        try (Reader reader = new FileReader(caminhoArquivo.toFile())) {
+            listaProdutos = gson.fromJson(reader, produtoListType);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+
+        // Salva as alterações no arquivo Produtos.json
+        try (FileWriter writer = new FileWriter(caminhoArquivo.toFile())) {
+            gson.toJson(listaProdutos, writer);
+            System.out.println("Estoque atualizado e persistido em Produtos.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
     }
 
     private void carregarHistoricoCompras() {
@@ -481,6 +600,52 @@ public class ClienteTela extends Application {
             e.printStackTrace();
         }
     }
+
+
+    private static List<Carrinho> lerJson() {
+        String filePath = System.getProperty("user.dir");
+        Gson gson = new Gson();
+
+        Type historicoType = new TypeToken<List<Carrinho>>(){}.getType();
+        Path caminhoArquivo = Paths.get(filePath,"Compra.json");
+
+        List<Carrinho> historico = new ArrayList<>();
+
+        try(Reader reader = new FileReader(caminhoArquivo.toFile())){
+            historico = gson.fromJson(reader,historicoType);
+            return historico;
+        }catch (Exception e){
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    private static Map<String, Integer> contarQuantidadePorProduto(List<Carrinho> compras) {
+        Map<String, Integer> quantidadePorProduto = new HashMap<>();
+
+        for (Carrinho compra : compras) {
+            for(int i = 0; i < compra.getQuantProd() ;i++){
+                String nomeProduto = compra.getProdutos(i).getNome();
+                int quantidade = quantidadePorProduto.getOrDefault(nomeProduto, 0);
+                quantidadePorProduto.put(nomeProduto, quantidade + 1);
+            }
+
+        }
+
+        return quantidadePorProduto;
+    }
+
+    private static List<Map.Entry<String, Integer>> obterProdutosMaisComprados(Map<String, Integer> quantidadePorProduto, int n) {
+        List<Map.Entry<String, Integer>> produtosOrdenados = new ArrayList<>(quantidadePorProduto.entrySet());
+
+        // Ordenar a lista pelo valor (quantidade) em ordem decrescente
+        produtosOrdenados.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+
+        // Retornar os n primeiros elementos da lista (os mais comprados)
+        return produtosOrdenados.subList(0, Math.min(n, produtosOrdenados.size()));
+    }
+
+
     public static void main(String[] args) {
         launch(args);
     }

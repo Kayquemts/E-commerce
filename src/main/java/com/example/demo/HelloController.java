@@ -57,12 +57,13 @@ public class HelloController {
                         Stage stage = new Stage();
 
                         Cliente.clienteLogado = a;
+
                         clienteTela.start(stage);
                         return;
                     }
                 }
             }catch(Exception e){
-                System.out.println("Deu Erro"+e);
+                System.out.println("Deu Erro "+e);
             }
 
         }else{
@@ -88,7 +89,7 @@ public class HelloController {
                     }
                 }
             }catch(Exception e){
-                System.out.println("Deu Erro"+e.getMessage());
+                System.out.println("Deu Erro "+e.getMessage());
             }
 
         }

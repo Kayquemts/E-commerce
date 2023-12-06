@@ -65,6 +65,59 @@ public class AdminTela extends Application {
         Button admReportsButton = new Button("Exibir relatórios");
         Button admExitButton = new Button("Sair do menu admin");
 
+        admReportsButton.setOnAction(event -> {
+            // Criar uma nova janela para exibir o relatório
+            Stage relatorio = new Stage();
+            relatorio.setTitle("Relatorio");
+
+            // Ler o JSON do arquivo
+            List<Carrinho> compras = lerJson();
+
+
+
+            // Calcular o total gasto por cliente
+            Map<String, Double> totalGastoPorCliente = calcularTotalGastoPorCliente(compras);
+
+            // Criar um ranking ordenado pelo total gasto
+            List<Map.Entry<String, Double>> ranking = ordenarRanking(totalGastoPorCliente);
+
+            // Criar uma string para exibir o ranking
+            StringBuilder rankingTexto = new StringBuilder("Ranking dos clientes que mais compraram:\n");
+            for (int i = 0; i < ranking.size(); i++) {
+                rankingTexto.append((i + 1)).append(". Cliente: ").append(ranking.get(i).getKey())
+                        .append(", Total Gasto: R$").append(ranking.get(i).getValue()).append("\n");
+            }
+
+            // Criar um rótulo para exibir o ranking
+            Label labelRanking = new Label(rankingTexto.toString());
+            VBox relatorioLayout = new VBox(10);
+
+            relatorioLayout.getChildren().addAll(labelRanking);
+
+            Label produtos = new Label("Produtos em falta: ");
+            relatorioLayout.getChildren().addAll(produtos);
+            List<String> produtoFalta = produtosEmFalta();
+
+
+            for(int i = 0; i < produtoFalta.size(); i++){
+                Label produto = new Label(produtoFalta.get(i));
+
+                relatorioLayout.getChildren().add(produto);
+            }
+
+            // Layout para a nova janela
+
+
+            relatorioLayout.setAlignment(Pos.CENTER);
+
+            // Adicionar o layout à cena e exibir a nova janela
+            Scene scene = new Scene(relatorioLayout, 400, 300);
+            relatorio.setScene(scene);
+            relatorio.show();
+
+
+        });
+
         insertButton.setOnAction(event -> {
             Stage inserirProdutoStage = new Stage();
             inserirProdutoStage.setTitle("Inserir Produto");
@@ -267,7 +320,7 @@ public class AdminTela extends Application {
             root.getChildren().add(atualizarEstoqueLayout);
         });
 
-        admReportsButton.setOnAction(event -> {/* Lógica para exibir relatórios */});
+
         admExitButton.setOnAction(event -> setupAdminScene());
 
         root.getChildren().addAll(msg3, insertButton, alterButton, removeButton,
@@ -404,7 +457,67 @@ public class AdminTela extends Application {
         }
     }
 
+    private static List<Carrinho> lerJson() {
+        String filePath = System.getProperty("user.dir");
+        Gson gson = new Gson();
 
+        Type historicoType = new TypeToken<List<Carrinho>>(){}.getType();
+        Path caminhoArquivo = Paths.get(filePath,"Compra.json");
+
+        List<Carrinho> historico = new ArrayList<>();
+
+        try(Reader reader = new FileReader(caminhoArquivo.toFile())){
+            historico = gson.fromJson(reader,historicoType);
+            return historico;
+        }catch (Exception e){
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    private static Map<String, Double> calcularTotalGastoPorCliente(List<Carrinho> compras) {
+        Map<String, Double> totalGastoPorCliente = new HashMap<>();
+
+        for (Carrinho compra : compras) {
+            String cliente = compra.getCliente();
+            double totalGasto = compra.calcularTotalGasto();
+            totalGastoPorCliente.put(cliente, totalGasto + totalGastoPorCliente.getOrDefault(cliente, 0.0));
+        }
+
+        return totalGastoPorCliente;
+    }
+
+    private static List<Map.Entry<String, Double>> ordenarRanking(Map<String, Double> totalGastoPorCliente) {
+        List<Map.Entry<String, Double>> ranking = new ArrayList<>(totalGastoPorCliente.entrySet());
+
+        // Ordenar o ranking pelo valor (total gasto) em ordem decrescente
+        ranking.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+
+        return ranking;
+    }
+
+    private static List<String> produtosEmFalta() {
+        String filePath = System.getProperty("user.dir");
+        Gson gson = new Gson();
+        Type produtoList = new TypeToken<List<Produto>>() {}.getType();
+        Path caminhoArquivo = Paths.get(filePath, "Produtos.json");
+        List<Produto> listaProduto = new ArrayList<>();
+        List<String> produtosEmFalta = new ArrayList<>();
+
+        try (Reader reader = new FileReader(caminhoArquivo.toFile())) {
+            listaProduto = gson.fromJson(reader, produtoList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (Produto produto : listaProduto) {
+            if (produto.getQuantidadeEmEstoque() == 0) {
+                produtosEmFalta.add(produto.getNome());
+            }
+        }
+
+        return produtosEmFalta;
+    }
 
     //-----------------------------------------------------------------------------
     public static void main(String[] args) {
